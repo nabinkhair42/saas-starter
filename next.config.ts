@@ -1,3 +1,4 @@
+import { createMDX } from 'fumadocs-mdx/next';
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
@@ -5,8 +6,7 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // Disable React strict mode for the upload-avatar component
   reactStrictMode: true,
 };
 
-export default nextConfig;
+export default createMDX()(nextConfig);

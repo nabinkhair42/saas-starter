@@ -1,8 +1,10 @@
 'use client';
 
+import { getApiErrorMessage } from '@/lib/utils';
 import { useAuth } from '@/providers/auth-provider';
 import { userService } from '@/services/user-service';
 import {
+  ApiError,
   ChangePasswordRequest,
   ChangeUsernameRequest,
   DeleteUserRequest,
@@ -16,18 +18,6 @@ import toast from 'react-hot-toast';
 export const userQueryKeys = {
   userDetails: ['user', 'details'] as const,
   sessions: ['user', 'sessions'] as const,
-};
-
-type ApiError = Error & {
-  response?: {
-    data?: {
-      message?: string;
-    };
-  };
-};
-
-const getErrorMessage = (error: ApiError, fallback: string) => {
-  return error.response?.data?.message ?? fallback;
 };
 
 // Get user details query
@@ -53,7 +43,7 @@ export const useUpdateUserDetails = () => {
       return toast.promise(userService.updateUserDetails(data), {
         loading: 'Updating profile',
         success: response => response.message,
-        error: response => response.message,
+        error: (error: ApiError) => getApiErrorMessage(error, 'Unable to update profile'),
       });
     },
     onSuccess: () => {
@@ -77,7 +67,10 @@ export const useUpdateUserDetails = () => {
     },
     onError: (error: ApiError) => {
       toast.error(
-        getErrorMessage(error, 'Unable to update your profile right now. Please try again later.')
+        getApiErrorMessage(
+          error,
+          'Unable to update your profile right now. Please try again later.'
+        )
       );
     },
   });
@@ -93,7 +86,7 @@ export const useChangeUsername = (onSuccessCallback?: () => void) => {
       return toast.promise(userService.changeUsername(data), {
         loading: 'Updating username',
         success: response => response.message,
-        error: response => response.message,
+        error: (error: ApiError) => getApiErrorMessage(error, 'Unable to update username'),
       });
     },
     onSuccess: async (response, variables) => {
@@ -124,7 +117,7 @@ export const useChangeUsername = (onSuccessCallback?: () => void) => {
     },
     onError: (error: ApiError) => {
       toast.error(
-        getErrorMessage(error, 'Unable to update username right now. Please try again later.')
+        getApiErrorMessage(error, 'Unable to update username right now. Please try again later.')
       );
     },
   });
@@ -146,7 +139,7 @@ export const useChangePassword = () => {
       return toast.promise(userService.changePassword(data), {
         loading: 'Changing password',
         success: response => response.message,
-        error: response => response.message,
+        error: (error: ApiError) => getApiErrorMessage(error, 'Unable to change password'),
       });
     },
     onSuccess: () => {
@@ -154,7 +147,7 @@ export const useChangePassword = () => {
     },
     onError: (error: ApiError) => {
       toast.error(
-        getErrorMessage(error, 'Unable to update password right now. Please try again later.')
+        getApiErrorMessage(error, 'Unable to update password right now. Please try again later.')
       );
     },
   });
@@ -170,7 +163,7 @@ export const useDeleteUser = () => {
       return toast.promise(userService.deleteUser(data), {
         loading: 'Deleting account',
         success: response => response.message,
-        error: response => response.message,
+        error: (error: ApiError) => getApiErrorMessage(error, 'Unable to delete the account'),
       });
     },
     onSuccess: () => {
@@ -183,7 +176,7 @@ export const useDeleteUser = () => {
       logout();
       queryClient.clear();
       toast.error(
-        getErrorMessage(error, 'Unable to delete the account right now. Please try again later.')
+        getApiErrorMessage(error, 'Unable to delete the account right now. Please try again later.')
       );
     },
   });
@@ -209,14 +202,14 @@ export const useRevokeSession = () => {
       toast.promise(userService.revokeSession({ sessionId }), {
         loading: 'Revoking session',
         success: response => response.message,
-        error: response => response.message,
+        error: (error: ApiError) => getApiErrorMessage(error, 'Unable to revoke the session'),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: userQueryKeys.sessions });
     },
     onError: (error: ApiError) => {
       toast.error(
-        getErrorMessage(error, 'Unable to revoke the session right now. Please try again later.')
+        getApiErrorMessage(error, 'Unable to revoke the session right now. Please try again later.')
       );
     },
   });

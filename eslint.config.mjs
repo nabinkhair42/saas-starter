@@ -1,22 +1,26 @@
-import { FlatCompat } from '@eslint/eslintrc';
+import typescriptEslintPlugin from '@typescript-eslint/eslint-plugin';
+import typescriptEslintParser from '@typescript-eslint/parser';
 import unusedImports from 'eslint-plugin-unused-imports';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
 
 const eslintConfig = [
-  ...compat.extends('next/core-web-vitals', 'next/typescript'),
   {
+    files: ['**/*.{js,jsx,ts,tsx}'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      parser: typescriptEslintParser,
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
+    },
     plugins: {
+      '@typescript-eslint': typescriptEslintPlugin,
       'unused-imports': unusedImports,
     },
     rules: {
+      ...typescriptEslintPlugin.configs.recommended.rules,
       'unused-imports/no-unused-imports': 'error',
       'unused-imports/no-unused-vars': [
         'warn',
@@ -48,11 +52,10 @@ const config = [
       '**/.turbo/**',
       '**/.vercel/**',
       '**/public/**',
+      './.source/**',
     ],
   },
   ...eslintConfig,
 ];
 
 export default config;
-
-export { eslintConfig };

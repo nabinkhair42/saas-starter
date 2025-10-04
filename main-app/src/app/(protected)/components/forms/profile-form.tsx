@@ -30,7 +30,6 @@ import { format } from 'date-fns';
 import {
   CalendarIcon,
   Check,
-  CheckCircle,
   ChevronDown,
   Loader2,
   MapPin,
@@ -39,67 +38,8 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useState } from 'react';
-import {
-  FaDiscord,
-  FaFacebook,
-  FaGithub,
-  FaGlobe,
-  FaInstagram,
-  FaLinkedin,
-  FaTiktok,
-  FaXTwitter,
-  FaYoutube,
-} from 'react-icons/fa6';
-
-// Social platform constants
-const SOCIAL_PLATFORMS = {
-  website: {
-    label: 'Website',
-    icon: FaGlobe,
-    placeholder: 'https://yourwebsite.com',
-  },
-  github: {
-    label: 'GitHub',
-    icon: FaGithub,
-    placeholder: 'https://github.com/username',
-  },
-  twitter: {
-    label: 'Twitter',
-    icon: FaXTwitter,
-    placeholder: 'https://twitter.com/username',
-  },
-  linkedin: {
-    label: 'LinkedIn',
-    icon: FaLinkedin,
-    placeholder: 'https://linkedin.com/in/username',
-  },
-  instagram: {
-    label: 'Instagram',
-    icon: FaInstagram,
-    placeholder: 'https://instagram.com/username',
-  },
-  facebook: {
-    label: 'Facebook',
-    icon: FaFacebook,
-    placeholder: 'https://facebook.com/username',
-  },
-  youtube: {
-    label: 'YouTube',
-    icon: FaYoutube,
-    placeholder: 'https://youtube.com/@username',
-  },
-  tiktok: {
-    label: 'TikTok',
-    icon: FaTiktok,
-    placeholder: 'https://tiktok.com/@username',
-  },
-  discord: {
-    label: 'Discord',
-    icon: FaDiscord,
-    placeholder: 'https://discord.gg/server',
-  },
-  other: { label: 'Other', icon: FaGlobe, placeholder: 'https://example.com' },
-} as const;
+import { FaGlobe } from 'react-icons/fa6';
+import { SOCIAL_PLATFORMS } from './constants';
 
 // Integrated Social Input Component
 function SocialInput({
@@ -275,7 +215,7 @@ export function ProfileForm() {
                               {checkingUsername ? (
                                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                               ) : usernameAvailable === true ? (
-                                <CheckCircle className="h-4 w-4 text-green-500" />
+                                <Check className="h-4 w-4 text-green-500" />
                               ) : usernameAvailable === false ? (
                                 <XCircle className="h-4 w-4 text-red-500" />
                               ) : null}

@@ -13,14 +13,20 @@ export async function StarsCount() {
   const json = await data.json();
 
   return (
-    <span className="text-muted-foreground w-8 text-xs tabular-nums">{json.stargazers_count}</span>
+    <div className="text-xs flex items-center justify-center">
+      <p> {json.stargazers_count}</p>
+    </div>
   );
 }
 
 export const GitHubButton = () => {
   return (
     <>
-      <Button variant={'outline'} size="sm" className="rounded-full sm:inline-flex shadow-none">
+      <Button
+        variant={'outline'}
+        size="sm"
+        className="rounded-full flex gap-[8px] w-fit sm:inline-flex shadow-none"
+      >
         <SiGithub />
         <StarsCount />
       </Button>

@@ -1,0 +1,75 @@
+---
+title: 'useAvatarUpload'
+description: 'Documentation for the useAvatarUpload hook.'
+---
+
+# useAvatarUpload
+
+A custom React hook for handling avatar upload and deletion functionality using UploadThing for file uploads and user service for database updates.
+
+## Usage
+
+```tsx
+import { useAvatarUpload } from '@/hooks/users/use-avatar-upload';
+
+function AvatarComponent() {
+  const { uploadAvatar, deleteAvatar, isUploading } = useAvatarUpload();
+
+  const handleFileUpload = async (file: File) => {
+    try {
+      const avatarUrl = await uploadAvatar(file);
+      console.log('Avatar uploaded:', avatarUrl);
+    } catch (error) {
+      console.error('Upload failed:', error);
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await deleteAvatar();
+      console.log('Avatar deleted');
+    } catch (error) {
+      console.error('Delete failed:', error);
+    }
+  };
+
+  return (
+    <div>
+      <input
+        type="file"
+        onChange={e =>
+          e.target.files?.[0] && handleFileUpload(e.target.files[0])
+        }
+        disabled={isUploading}
+      />
+      <button onClick={handleDelete} disabled={isUploading}>
+        Delete Avatar
+      </button>
+    </div>
+  );
+}
+```
+
+## API
+
+### uploadAvatar(file: File)
+
+Uploads an avatar image file to UploadThing and updates the user's avatar URL in the database.
+
+- **Parameters:**
+  - `file`: The File object to upload (should be an image)
+- **Returns:** `Promise<string>` - The URL of the uploaded file
+- **Throws:** Error if upload fails
+
+### deleteAvatar()
+
+Deletes the current avatar from the database and refreshes user details.
+
+- **Returns:** `Promise<void>`
+- **Throws:** Error if deletion fails
+
+### isUploading
+
+A boolean indicating if an upload operation is currently in progress.
+
+- **Type:** `boolean`

@@ -12,7 +12,6 @@ import {
 import { userService } from '@/services/user-service';
 import { UpdateUserDetailsRequest } from '@/types/api';
 import { profileFormInputSchema } from '@/zod/usersUpdate';
-import toast from 'react-hot-toast';
 
 type ProfileFormValues = z.infer<typeof profileFormInputSchema>;
 type ProfileFormLocation = NonNullable<ProfileFormValues['location']>;
@@ -53,6 +52,22 @@ const normalizeLocation = (
   const hasValues = Object.values(trimmed).some(value => value.length > 0);
 
   return hasValues ? trimmed : null;
+};
+
+const locationsAreEqual = (
+  first: ProfileFormLocation | null,
+  second: ProfileFormLocation | null
+) => {
+  if (!first && !second) return true;
+  if (!first || !second) return false;
+
+  return (
+    first.address === second.address &&
+    first.city === second.city &&
+    first.state === second.state &&
+    first.country === second.country &&
+    first.zipCode === second.zipCode
+  );
 };
 
 export function useProfileForm() {
@@ -108,41 +123,57 @@ export function useProfileForm() {
 
   // Check username availability when debounced value changes
   useEffect(() => {
-    if (debouncedUsername && userDetails?.data?.user) {
-      const currentUsername = userDetails.data.user.username;
-      const hasChangedUsername = userDetails.data.user.hasChangedUsername;
+    const user = userDetails?.data?.user;
 
-      // Don't check if username hasn't changed or if user has already changed username
-      if (debouncedUsername === currentUsername || hasChangedUsername) {
-        setUsernameAvailable(null);
-        return;
-      }
-
-      // Don't check if username is empty or too short
-      if (debouncedUsername.length < 3) {
-        setUsernameAvailable(null);
-        return;
-      }
-
-      // Reset states before checking
-      setCheckingUsername(true);
+    if (!debouncedUsername || !user) {
+      setCheckingUsername(false);
       setUsernameAvailable(null);
-
-      // Use the service directly instead of the mutation hook
-      toast.promise(userService.checkUsernameAvailability(debouncedUsername), {
-        loading: 'Checking username availability...',
-        success: () => {
-          setUsernameAvailable(true);
-          setCheckingUsername(false);
-          return 'Username is available!';
-        },
-        error: () => {
-          setUsernameAvailable(false);
-          setCheckingUsername(false);
-          return 'Username is not available';
-        },
-      });
+      return;
     }
+
+    const currentUsername = user.username;
+    const hasChangedUsername = user.hasChangedUsername;
+
+    // Skip checks if username matches current value or has already been changed once
+    if (debouncedUsername === currentUsername || hasChangedUsername) {
+      setCheckingUsername(false);
+      setUsernameAvailable(null);
+      return;
+    }
+
+    // Require minimum length before triggering API call
+    if (debouncedUsername.length < 3) {
+      setCheckingUsername(false);
+      setUsernameAvailable(null);
+      return;
+    }
+
+    let isCancelled = false;
+    setCheckingUsername(true);
+    setUsernameAvailable(null);
+
+    const checkAvailability = async () => {
+      try {
+        await userService.checkUsernameAvailability(debouncedUsername);
+        if (!isCancelled) {
+          setUsernameAvailable(true);
+        }
+      } catch {
+        if (!isCancelled) {
+          setUsernameAvailable(false);
+        }
+      } finally {
+        if (!isCancelled) {
+          setCheckingUsername(false);
+        }
+      }
+    };
+
+    checkAvailability();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [debouncedUsername, userDetails]);
 
   const updateOtherDetails = (data: ProfileFormValues) => {
@@ -156,7 +187,7 @@ export function useProfileForm() {
     const user = userDetails?.data?.user;
     const nextLocation = normalizeLocation(data.location);
     const currentLocation = normalizeLocation(locationFromUser(user?.location));
-    const locationHasChanged = JSON.stringify(nextLocation) !== JSON.stringify(currentLocation);
+    const locationHasChanged = !locationsAreEqual(nextLocation, currentLocation);
 
     const payload: UpdateUserDetailsRequest = {
       firstName: data.firstName,

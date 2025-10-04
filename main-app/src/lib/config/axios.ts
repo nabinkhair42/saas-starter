@@ -1,5 +1,18 @@
 import axios, { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
+const storage: Storage | null = typeof window !== 'undefined' ? window.localStorage : null;
+
+type RefreshTokenResponse = {
+  data: {
+    accessToken: string;
+    refreshToken: string;
+  };
+};
+
+const getItem = (key: string): string | null => storage?.getItem(key) ?? null;
+const setItem = (key: string, value: string) => storage?.setItem(key, value);
+const removeItem = (key: string) => storage?.removeItem(key);
+
 // Create axios instance
 const api = axios.create({
   baseURL: '/api',
@@ -11,45 +24,74 @@ const api = axios.create({
 
 // Token management utilities
 export const tokenManager = {
-  getAccessToken: () => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('accessToken');
-    }
-    return null;
-  },
-
-  getRefreshToken: () => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('refreshToken');
-    }
-    return null;
-  },
-
-  getSessionId: () => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('sessionId');
-    }
-    return null;
-  },
-
+  getAccessToken: () => getItem('accessToken'),
+  getRefreshToken: () => getItem('refreshToken'),
+  getSessionId: () => getItem('sessionId'),
   setTokens: (accessToken: string, refreshToken: string, sessionId?: string) => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('accessToken', accessToken);
-      localStorage.setItem('refreshToken', refreshToken);
-      if (sessionId) {
-        localStorage.setItem('sessionId', sessionId);
-      }
+    setItem('accessToken', accessToken);
+    setItem('refreshToken', refreshToken);
+    if (sessionId) {
+      setItem('sessionId', sessionId);
     }
   },
-
   clearTokens: () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      localStorage.removeItem('sessionId');
-    }
+    removeItem('accessToken');
+    removeItem('refreshToken');
+    removeItem('user');
+    removeItem('sessionId');
   },
+};
+
+const redirectToLogin = () => {
+  if (typeof window !== 'undefined') {
+    window.location.href = '/log-in';
+  }
+};
+
+const AUTH_ENDPOINT_PREFIXES = [
+  '/log-in',
+  '/create-account',
+  '/email-verification',
+  '/forgot-password',
+  '/reset-password',
+];
+
+const isAuthEndpoint = (url: string | undefined) => {
+  if (!url) return false;
+  return AUTH_ENDPOINT_PREFIXES.some(prefix => url.includes(prefix));
+};
+
+const handleSessionInvalid = (error: unknown) => {
+  tokenManager.clearTokens();
+  redirectToLogin();
+  return Promise.reject(error);
+};
+
+const refreshAccessToken = async (
+  originalRequest: InternalAxiosRequestConfig & { _retry?: boolean }
+) => {
+  const refreshToken = tokenManager.getRefreshToken();
+  if (!refreshToken) {
+    return handleSessionInvalid(new Error('Missing refresh token'));
+  }
+
+  const sessionId = tokenManager.getSessionId();
+  const headers = sessionId ? { 'X-Session-Id': sessionId } : undefined;
+
+  const { data } = await axios.post<RefreshTokenResponse>(
+    '/api/auth/refresh-token',
+    { refreshToken },
+    { headers }
+  );
+
+  const { accessToken, refreshToken: newRefreshToken } = data.data;
+  tokenManager.setTokens(accessToken, newRefreshToken, sessionId ?? undefined);
+
+  if (originalRequest.headers) {
+    originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+  }
+
+  return api(originalRequest);
 };
 
 // Request interceptor to add auth token
@@ -85,60 +127,16 @@ api.interceptors.response.use(
         normalizedMessage.includes('session revoked') ||
         normalizedMessage.includes('session context missing')
       ) {
-        tokenManager.clearTokens();
-        window.location.href = '/log-in';
-        return Promise.reject(error);
+        return handleSessionInvalid(error);
       }
     }
 
-    // Skip 401 handling for authentication endpoints
-    const isAuthEndpoint =
-      originalRequest.url?.includes('/log-in') ||
-      originalRequest.url?.includes('/create-account') ||
-      originalRequest.url?.includes('/email-verification') ||
-      originalRequest.url?.includes('/forgot-password') ||
-      originalRequest.url?.includes('/reset-password');
-
-    if (responseStatus === 401 && !originalRequest._retry && !isAuthEndpoint) {
+    if (responseStatus === 401 && !originalRequest._retry && !isAuthEndpoint(originalRequest.url)) {
       originalRequest._retry = true;
-
-      const refreshToken = tokenManager.getRefreshToken();
-      if (refreshToken) {
-        try {
-          const sessionId = tokenManager.getSessionId();
-          const response = await axios.post(
-            '/api/auth/refresh-token',
-            {
-              refreshToken,
-            },
-            {
-              headers: sessionId
-                ? {
-                    'X-Session-Id': sessionId,
-                  }
-                : undefined,
-            }
-          );
-
-          const { accessToken, refreshToken: newRefreshToken } = response.data.data;
-          const existingSessionId = tokenManager.getSessionId();
-          tokenManager.setTokens(accessToken, newRefreshToken, existingSessionId ?? undefined);
-
-          // Retry original request with new token
-          if (originalRequest.headers) {
-            originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-          }
-          return api(originalRequest);
-        } catch (refreshError) {
-          // Refresh failed, redirect to login
-          tokenManager.clearTokens();
-          window.location.href = '/log-in';
-          return Promise.reject(refreshError);
-        }
-      } else {
-        // No refresh token, redirect to login
-        tokenManager.clearTokens();
-        window.location.href = '/log-in';
+      try {
+        return await refreshAccessToken(originalRequest);
+      } catch (refreshError) {
+        return handleSessionInvalid(refreshError);
       }
     }
 

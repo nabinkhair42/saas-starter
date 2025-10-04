@@ -1,0 +1,97 @@
+---
+title: 'useProfileForm'
+description: 'Documentation for the useProfileForm hook.'
+---
+
+# useProfileForm
+
+A comprehensive custom React hook for managing user profile form state, validation, and submission using React Hook Form and Zod validation.
+
+## Usage
+
+```tsx
+import { useProfileForm } from '@/hooks/users/use-profile-form';
+
+function ProfileFormComponent() {
+  const {
+    form,
+    fields,
+    append,
+    remove,
+    handleSubmit,
+    isLoading,
+    isSubmitDisabled,
+    isUpdating,
+    usernameValue,
+    usernameAvailable,
+    checkingUsername,
+    handleUsernameChange,
+    hasChangedUsername,
+    user,
+  } = useProfileForm();
+
+  const onSubmit = data => {
+    console.log('Form data:', data);
+  };
+
+  if (isLoading) return <div>Loading...</div>;
+
+  return (
+    <form onSubmit={form.handleSubmit(onSubmit)}>
+      <input {...form.register('firstName')} placeholder="First Name" />
+
+      <input
+        value={usernameValue}
+        onChange={handleUsernameChange}
+        placeholder="Username"
+      />
+      {checkingUsername && <span>Checking...</span>}
+      {usernameAvailable === false && <span>Username taken</span>}
+
+      <button type="submit" disabled={isSubmitDisabled}>
+        {isUpdating ? 'Updating...' : 'Update Profile'}
+      </button>
+    </form>
+  );
+}
+```
+
+## API
+
+### Form Controls
+
+- `form`: The React Hook Form instance with methods like `register`, `handleSubmit`, etc.
+- `fields`: Array of social account fields for the field array
+- `append`: Function to add a new social account field
+- `remove`: Function to remove a social account field at a specific index
+- `handleSubmit`: Function to handle form submission with username change logic
+
+### Loading States
+
+- `isLoading`: Boolean indicating if user details are being loaded
+- `isSubmitDisabled`: Boolean indicating if the submit button should be disabled
+- `isUpdating`: Boolean indicating if an update operation is in progress
+
+### Username Management
+
+- `usernameValue`: Current username input value
+- `usernameAvailable`: Boolean or null indicating username availability
+- `checkingUsername`: Boolean indicating if username availability is being checked
+- `handleUsernameChange`: Function to handle username input changes
+- `hasChangedUsername`: Boolean indicating if the user has already changed their username
+
+### User Data
+
+- `user`: The current user object from user details
+
+## Form Schema
+
+The form uses the `profileFormInputSchema` from Zod validation, including fields for:
+
+- `firstName`: string
+- `lastName`: string
+- `username`: string
+- `bio`: string
+- `socialAccounts`: array of objects with `provider` and `url`
+- `dob`: Date
+- `location`: object with address, city, state, country, zipCode

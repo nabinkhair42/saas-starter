@@ -1,8 +1,10 @@
 'use client';
 
 import { setLastUsedProviderCookie } from '@/hooks/auth/use-last-used-provider';
+import { getApiErrorMessage } from '@/lib/utils';
 import { useAuth } from '@/providers/auth-provider';
 import { authService } from '@/services/auth-service';
+import type { ApiError } from '@/types/api';
 import {
   CreateAccountRequest,
   EmailVerificationRequest,
@@ -14,18 +16,6 @@ import { AuthMethod } from '@/types/user';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 
-type ApiError = Error & {
-  response?: {
-    data?: {
-      message?: string;
-    };
-  };
-};
-
-const extractErrorMessage = (error: ApiError, fallback: string) => {
-  return error.response?.data?.message ?? fallback;
-};
-
 // Login mutation
 export const useLogin = () => {
   const { login } = useAuth();
@@ -36,7 +26,7 @@ export const useLogin = () => {
         loading: 'Logging in',
         success: response => response.message,
         error: (error: ApiError) =>
-          extractErrorMessage(error, 'Unable to log in. Please try again.'),
+          getApiErrorMessage(error, 'Unable to log in. Please try again.'),
       });
     },
     onSuccess: response => {
@@ -48,9 +38,7 @@ export const useLogin = () => {
       setLastUsedProviderCookie(AuthMethod.EMAIL);
     },
     onError: (error: ApiError) => {
-      toast.error(
-        extractErrorMessage(error, 'Unable to log in right now. Please try again later.')
-      );
+      toast.error(getApiErrorMessage(error, 'Unable to log in right now. Please try again later.'));
     },
   });
 };
@@ -63,12 +51,12 @@ export const useCreateAccount = () => {
         loading: 'Creating account',
         success: response => response.message,
         error: (error: ApiError) =>
-          extractErrorMessage(error, 'Unable to create account right now. Please try again later.'),
+          getApiErrorMessage(error, 'Unable to create account right now. Please try again later.'),
       });
     },
     onError: (error: ApiError) => {
       toast.error(
-        extractErrorMessage(error, 'Unable to create account right now. Please try again later.')
+        getApiErrorMessage(error, 'Unable to create account right now. Please try again later.')
       );
     },
   });
@@ -84,7 +72,7 @@ export const useVerifyEmail = (onSuccessCallback?: () => void) => {
         loading: 'Verifying email...',
         success: response => response.message,
         error: (error: ApiError) =>
-          extractErrorMessage(error, 'Unable to verify email right now. Please try again later.'),
+          getApiErrorMessage(error, 'Unable to verify email right now. Please try again later.'),
       });
     },
     onSuccess: response => {
@@ -101,7 +89,7 @@ export const useVerifyEmail = (onSuccessCallback?: () => void) => {
     },
     onError: (error: ApiError) => {
       toast.error(
-        extractErrorMessage(error, 'Unable to verify email right now. Please try again later.')
+        getApiErrorMessage(error, 'Unable to verify email right now. Please try again later.')
       );
     },
   });
@@ -115,12 +103,12 @@ export const useResendVerification = () => {
         loading: 'Sending verification email',
         success: response => response.message,
         error: (error: ApiError) =>
-          extractErrorMessage(error, 'Unable to send verification email. Please try again later.'),
+          getApiErrorMessage(error, 'Unable to send verification email. Please try again later.'),
       });
     },
     onError: (error: ApiError) => {
       toast.error(
-        extractErrorMessage(error, 'Unable to send verification email. Please try again later.')
+        getApiErrorMessage(error, 'Unable to send verification email. Please try again later.')
       );
     },
   });
@@ -134,15 +122,12 @@ export const useForgotPassword = () => {
         loading: 'Sending password reset email',
         success: response => response.message,
         error: (error: ApiError) =>
-          extractErrorMessage(
-            error,
-            'Unable to send password reset email. Please try again later.'
-          ),
+          getApiErrorMessage(error, 'Unable to send password reset email. Please try again later.'),
       });
     },
     onError: (error: ApiError) => {
       toast.error(
-        extractErrorMessage(error, 'Unable to send password reset email. Please try again later.')
+        getApiErrorMessage(error, 'Unable to send password reset email. Please try again later.')
       );
     },
   });
@@ -156,12 +141,12 @@ export const useResetPassword = () => {
         loading: 'Resetting password',
         success: response => response.message,
         error: (error: ApiError) =>
-          extractErrorMessage(error, 'Unable to reset password right now. Please try again later.'),
+          getApiErrorMessage(error, 'Unable to reset password right now. Please try again later.'),
       });
     },
     onError: (error: ApiError) => {
       toast.error(
-        extractErrorMessage(error, 'Unable to reset password right now. Please try again later.')
+        getApiErrorMessage(error, 'Unable to reset password right now. Please try again later.')
       );
     },
   });
@@ -178,7 +163,7 @@ export const useLogout = () => {
         loading: 'Logging out...',
         success: response => response.message,
         error: (error: ApiError) =>
-          extractErrorMessage(error, 'Unable to log out right now. Please try again later.'),
+          getApiErrorMessage(error, 'Unable to log out right now. Please try again later.'),
       });
     },
     onSuccess: () => {
@@ -190,7 +175,7 @@ export const useLogout = () => {
       logout();
       queryClient.clear();
       toast.error(
-        extractErrorMessage(error, 'Unable to log out right now. Please try again later.')
+        getApiErrorMessage(error, 'Unable to log out right now. Please try again later.')
       );
     },
   });

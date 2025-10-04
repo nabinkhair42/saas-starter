@@ -1,0 +1,125 @@
+---
+title: 'useUserMutations'
+description: 'Documentation for the useUserMutations hook.'
+---
+
+# useUserMutations
+
+A collection of custom React hooks for user-related operations using React Query mutations and queries.
+
+## Usage
+
+```tsx
+import {
+  useUserDetails,
+  useUpdateUserDetails,
+  useChangeUsername,
+  useChangePassword,
+  useDeleteUser,
+  useUserSessions,
+  useRevokeSession,
+  useAuthMethod,
+} from '@/hooks/users/use-user-mutations';
+
+function UserProfileComponent() {
+  const { data: userDetails, isLoading } = useUserDetails();
+  const updateUserDetails = useUpdateUserDetails();
+  const changeUsername = useChangeUsername();
+  const changePassword = useChangePassword();
+  const deleteUser = useDeleteUser();
+  const { data: sessions } = useUserSessions();
+  const revokeSession = useRevokeSession();
+  const authMethod = useAuthMethod();
+
+  const handleUpdateProfile = data => {
+    updateUserDetails.mutate(data);
+  };
+
+  const handleChangeUsername = newUsername => {
+    changeUsername.mutate({ username: newUsername });
+  };
+
+  const handleChangePassword = passwordData => {
+    changePassword.mutate(passwordData);
+  };
+
+  const handleDeleteAccount = confirmation => {
+    deleteUser.mutate(confirmation);
+  };
+
+  const handleRevokeSession = sessionId => {
+    revokeSession.mutate(sessionId);
+  };
+
+  if (isLoading) return <div>Loading...</div>;
+
+  return (
+    <div>
+      <h2>User Profile</h2>
+      <p>Auth Method: {authMethod}</p>
+      {/* Profile update form */}
+      {/* Sessions list */}
+    </div>
+  );
+}
+```
+
+## Hooks
+
+### useUserDetails()
+
+Fetches and caches user details.
+
+- **Returns:** Query object with `data`, `isLoading`, `error`, etc.
+- **Data Structure:** `{ data: { user: User } }`
+
+### useUpdateUserDetails()
+
+Updates user profile details.
+
+- **Mutation Function:** `(data: UpdateUserDetailsRequest) => Promise`
+- **On Success:** Invalidates user details cache and updates auth context
+
+### useChangeUsername(onSuccessCallback?)
+
+Changes the user's username (one-time operation).
+
+- **Parameters:**
+  - `onSuccessCallback`: Optional callback function
+- **Mutation Function:** `(data: ChangeUsernameRequest) => Promise`
+- **On Success:** Invalidates cache, updates auth context, calls callback
+
+### useChangePassword()
+
+Changes the user's password.
+
+- **Mutation Function:** `(data: ChangePasswordRequest) => Promise`
+- **On Success:** Invalidates user details cache
+
+### useDeleteUser()
+
+Deletes the user account.
+
+- **Mutation Function:** `(data: DeleteUserRequest) => Promise`
+- **On Success:** Logs out user, clears cache, redirects to home
+
+### useUserSessions()
+
+Fetches user sessions.
+
+- **Returns:** Query object with sessions data
+- **Refetch:** Every 5 minutes automatically
+
+### useRevokeSession()
+
+Revokes a specific user session.
+
+- **Mutation Function:** `(sessionId: string) => Promise`
+- **On Success:** Invalidates sessions cache
+
+### useAuthMethod()
+
+Returns the user's authentication method.
+
+- **Returns:** String like 'EMAIL', 'GOOGLE', etc.
+- **Fallback:** 'EMAIL' if not available

@@ -231,7 +231,6 @@ export const ImageCropContent = ({ style, className }: ImageCropContentProps) =>
       {...reactCropProps}
     >
       {imgSrc && (
-        // eslint-disable-next-line @next/next/no-img-element
         <img alt="crop" className="size-full" onLoad={onImageLoad} ref={imgRef} src={imgSrc} />
       )}
     </ReactCrop>

@@ -1,19 +1,7 @@
 'use client';
 
 import { useAuth } from '@/providers/auth-provider';
-import { AuthenticatedUser } from '@/types/user';
-
-/**
- * Type definitions for session data
- */
-export interface SessionData {
-  user: AuthenticatedUser | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  isLoggedIn: boolean;
-  isGuest: boolean;
-  status: 'loading' | 'authenticated' | 'unauthenticated';
-}
+import type { SessionData } from '@/types/session';
 
 /**
  * Hook to access session information

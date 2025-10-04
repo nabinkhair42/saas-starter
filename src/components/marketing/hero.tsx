@@ -84,7 +84,7 @@ export default function Hero() {
           <div className="mx-auto mt-16 max-w-7xl [mask-image:linear-gradient(to_bottom,black_50%,transparent_100%)]">
             <div className="[perspective:1200px] [mask-image:linear-gradient(to_right,black_50%,transparent_100%)] -mr-16 lg:-mr-56 pl-16 lg:pl-56 relative h-[44rem]">
               {/* First Image */}
-              <div className="absolute inset-0 skew-x-[.56rad] translate-y-60 translate-x-80 translate-z-[50px]">
+              <div className="absolute inset-0 skew-x-[.56rad] translate-y-20 translate-x-65 translate-z-[50px]">
                 <RevealY delay={0.4}>
                   <Image
                     className="rounded-[4px] border dark:hidden [mask-image:linear-gradient(to_right,black_50%,transparent_100%)]"
@@ -104,7 +104,7 @@ export default function Hero() {
               </div>
 
               {/* Second Image stacked above */}
-              <div className="absolute inset-0 skew-x-[.56rad] translate-z-0 translate-x-60 ">
+              <div className="absolute inset-0 skew-x-[.56rad] translate-z-0 translate-x-100 ">
                 <RevealY delay={1.8}>
                   <Image
                     className="rounded-[4px] border dark:hidden"

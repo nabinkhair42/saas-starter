@@ -6,6 +6,17 @@ import {
   UserSession,
 } from '@/types/user';
 
+export interface ApiErrorResponse {
+  message?: string;
+}
+
+export type ApiError = Error & {
+  response?: {
+    status?: number;
+    data?: ApiErrorResponse;
+  };
+};
+
 // Authentication API interfaces
 export interface LoginRequest {
   email: string;
